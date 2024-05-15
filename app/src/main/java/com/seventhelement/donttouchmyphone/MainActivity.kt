@@ -53,6 +53,14 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
         alertDialog = AlertDialog.Builder(this).create()
         binding=ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
+
+        supportActionBar?.title = "Don't Touch My Phone"
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+        binding.toolbar.setNavigationOnClickListener {
+            onBackPressed()
+        }
         if (Build.VERSION.SDK_INT >= 33) {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         } else {
@@ -77,7 +85,7 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
          adapter = Adapter(list, this, packageName, this, seelctposition!!,true)
         binding.recyclerView.layoutManager= GridLayoutManager(this,2);
         binding.recyclerView.adapter= adapter;
-        binding.recyclerView.isNestedScrollingEnabled=false
+
 
         if (isServiceOn) {
            binding.recyclerView.setVisibility(View.INVISIBLE)

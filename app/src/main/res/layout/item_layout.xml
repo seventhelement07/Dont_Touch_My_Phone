@@ -15,14 +15,14 @@
         android:layout_marginTop="10dp"
         android:layout_width="wrap_content"
         android:layout_gravity="center"
-        android:layout_height="70dp"
+        android:layout_height="80dp"
 
         android:src="@drawable/applause" />
 
     <TextView
         android:id="@+id/textView"
         android:textStyle="bold"
-        android:textSize="10dp"
+        android:textSize="15dp"
         android:textColor="@color/black"
         android:layout_marginTop="10dp"
         android:layout_gravity="center"

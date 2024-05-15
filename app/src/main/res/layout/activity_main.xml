@@ -3,74 +3,103 @@
     xmlns:cardview="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/pexels">
+    xmlns:app="http://schemas.android.com/tools"
+    android:background="#FFFF">
 
-    <!-- ScrollView to enable vertical scrolling -->
-    <ScrollView
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="0dp"
+        android:orientation="vertical">
 
-        <!-- LinearLayout as a parent layout inside the ScrollView -->
-        <LinearLayout
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/tool"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/linearLayout">
 
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="#4CAF50"
+                app:layout_scrollFlags="scroll|enterAlways"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                app:title="Don't Touch My Phone"
+                app:titleTextColor="@android:color/white" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <!-- LinearLayout as a parent layout inside the ScrollView -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
-                <!-- Start Service Button -->
+                android:padding="16dp">
 
                 <LinearLayout
-                    android:id="@+id/startServiceButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:gravity="center_horizontal"
-                    android:padding="15dp">
+                    android:padding="20dp">
+                    <!-- Start Service Button -->
 
-                    <ImageView
-                        android:id="@+id/image"
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:src="@drawable/turnonicon"
-                        android:layout_gravity="center" />
-
-                    <TextView
-                        android:id="@+id/statusBtn"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:id="@+id/startServiceButton"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="30sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black"
-                        android:gravity="center"
-                        android:text="START" />
+                        android:gravity="center_horizontal"
+                        android:orientation="vertical"
+                        android:padding="15dp">
+
+                        <ImageView
+                            android:id="@+id/image"
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/turnonicon" />
+
+                        <TextView
+                            android:id="@+id/statusBtn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:text="START"
+                            android:textColor="@color/black"
+                            android:textSize="30sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/select"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:text="SELECT SOUND"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textStyle="bold" />
+                <!-- RecyclerView for Select Sound -->
+                <androidx.recyclerview.widget.RecyclerView
+
+                    android:id="@+id/recyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/select"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="SELECT SOUND"
-                android:textAlignment="center"
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                android:padding="10dp"
-                />
-            <!-- RecyclerView for Select Sound -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:nestedScrollingEnabled="false"
-                android:id="@+id/recyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        </LinearLayout>
-
-    </ScrollView>
+        </ScrollView>
+    </LinearLayout>
 
 </RelativeLayout>
