@@ -56,11 +56,7 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
         setSupportActionBar(binding.toolbar)
 
         supportActionBar?.title = "Don't Touch My Phone"
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setDisplayShowHomeEnabled(true)
-        binding.toolbar.setNavigationOnClickListener {
-            onBackPressed()
-        }
+
         if (Build.VERSION.SDK_INT >= 33) {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         } else {
