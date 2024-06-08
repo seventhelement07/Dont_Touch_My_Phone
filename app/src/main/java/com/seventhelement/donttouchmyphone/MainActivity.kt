@@ -21,40 +21,35 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.seventhelement.data1
 import com.seventhelement.donttouchmyphone.databinding.ActivityMainBinding
 
-class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
+class MainActivity :AppCompatActivity(), Adapter.OnItemSelectedListener {
     companion object {
         private const val REQUEST_NOTIFICATION_PERMISSION = 123
         val description = "Test Notification"
     }
-    lateinit var adapter:Adapter
+
+    lateinit var adapter: Adapter
     lateinit var binding: ActivityMainBinding
     @RequiresApi(Build.VERSION_CODES.O)
     var alertDialog: AlertDialog? = null
     var isServiceOn = false
     var cdt: CountDownTimer? = null
-    val mySharedPreference=MySharedPreference();
+    val mySharedPreference = MySharedPreference()
     var seelctposition = -1
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         try {
-
-            seelctposition = mySharedPreference.getInt(applicationContext);
+            seelctposition = mySharedPreference.getInt(applicationContext)
             if (seelctposition == -1) {
-                seelctposition = 0;
+                seelctposition = 0
             }
-        }
-        catch(e:Exception)
-        {
+        } catch (e: Exception) {}
 
-        }
-
-        //Toast.makeText(this,seelctposition.toString(),Toast.LENGTH_SHORT).show();
         alertDialog = AlertDialog.Builder(this).create()
-        binding=ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
-
         supportActionBar?.title = "Don't Touch My Phone"
 
         if (Build.VERSION.SDK_INT >= 33) {
@@ -62,105 +57,86 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
         } else {
             hasNotificationPermissionGranted = true
         }
-        val list= ArrayList<data1>();
-            list.add(data1("alarm",R.drawable.alarm));
-            list.add(data1("applause", R.drawable.applause));
-            list.add(data1("telephone", R.drawable.call));
-            list.add(data1("cartoon", R.drawable.cartoon));
-            list.add(data1("dog", R.drawable.dog));
-            list.add(data1("gaming", R.drawable.gaming));
-            list.add(data1("bike", R.drawable.bike));
-            list.add(data1("buzzer", R.drawable.buzzer));
-            list.add(data1("car", R.drawable.car));
-            list.add(data1("iphone_alarm", R.drawable.iphone));
-            list.add(data1("machine_gun", R.drawable.machin_gun));
-            list.add(data1("meow", R.drawable.cat));
-            list.add(data1("sniper", R.drawable.sniper));
-         isServiceOn =isServiceRunning(applicationContext, FourgroundService::class.java)
-        val intent=Intent(applicationContext,FourgroundService::class.java)
-         adapter = Adapter(list, this, packageName, this, seelctposition!!,true)
-        binding.recyclerView.layoutManager= GridLayoutManager(this,2);
-        binding.recyclerView.adapter= adapter;
 
+        val list = ArrayList<data1>()
+        list.add(data1("alarm", R.drawable.alarm))
+        list.add(data1("applause", R.drawable.applause))
+        list.add(data1("telephone", R.drawable.call))
+        list.add(data1("cartoon", R.drawable.cartoon))
+        list.add(data1("dog", R.drawable.dog))
+        list.add(data1("gaming", R.drawable.gaming))
+        list.add(data1("bike", R.drawable.bike))
+        list.add(data1("buzzer", R.drawable.buzzer))
+        list.add(data1("car", R.drawable.car))
+        list.add(data1("iphone_alarm", R.drawable.iphone))
+        list.add(data1("machine_gun", R.drawable.machin_gun))
+        list.add(data1("meow", R.drawable.cat))
+        list.add(data1("sniper", R.drawable.sniper))
+
+        isServiceOn = isServiceRunning(applicationContext, FourgroundService::class.java)
+        val intent = Intent(applicationContext, FourgroundService::class.java)
+        adapter = Adapter(list, this, packageName, this, seelctposition, true)
+        binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
+        binding.recyclerView.adapter = adapter
 
         if (isServiceOn) {
-           binding.recyclerView.setVisibility(View.INVISIBLE)
-            binding.select .setVisibility(View.INVISIBLE)
+            binding.recyclerView.visibility = View.INVISIBLE
+            binding.select.visibility = View.INVISIBLE
             binding.image.setImageResource(R.drawable.stop)
-            binding.statusBtn.setText("STOP")
+            binding.statusBtn.text = "STOP"
         } else {
-            binding.recyclerView.setVisibility(View.VISIBLE)
-            binding.select.setVisibility(View.VISIBLE)
+            binding.recyclerView.visibility = View.VISIBLE
+            binding.select.visibility = View.VISIBLE
             binding.image.setImageResource(R.drawable.turnonicon)
-            binding.statusBtn.setText("START")
+            binding.statusBtn.text = "START"
         }
 
         binding.image.setOnClickListener {
             if (seelctposition == -1)
-                Toast.makeText(this, "Please Select Any Sound To Continue", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Please Select Any Sound To Continue", Toast.LENGTH_SHORT).show()
             else {
                 intent.putExtra("message_key2", Constants.getlist()[seelctposition].title)
                 if (isServiceOn) {
-                    binding.recyclerView.setVisibility(View.VISIBLE)
-                    binding.select.setVisibility(View.VISIBLE)
+                    binding.recyclerView.visibility = View.VISIBLE
+                    binding.select.visibility = View.VISIBLE
                     binding.statusBtn.text = "START SERVICE"
                     binding.image.setImageResource(R.drawable.turnonicon)
+                    binding.image.isEnabled = true
                     stopService(intent)
-//                    isServiceOn=false;
-//                    audioClassificationHelper.startAudioClassification();
-//                    audioClassificationHelper.stopAudioClassification();
-//                    isServiceOn=false;
-//                    // MySharedPreferences.saveBoolean(getApplicationContext(), isServiceOn);
-//                    stopFlashingAndRinging();
-//                    turnOffFlashlight();
-//                    mediaPlayer.pause();
-//                    mediaPlayer.seekTo(0);
                     isServiceOn = false
                 } else {
-                    binding.image.setImageResource(R.drawable.stop)
-                    //audioClassificationHelper.startAudioClassification();
+                    binding.image.setImageResource(R.drawable.stop2)
+                    binding.image.isEnabled = false
                     isServiceOn = true
                     adapter.releaseMediaPlayer()
                     binding.statusBtn.text = "STOP SERVICE"
-                    binding.recyclerView.setVisibility(View.INVISIBLE)
-                    binding.select .setVisibility(View.INVISIBLE)
-                    alertDialog!!.setTitle("Will Be Activated In 10 Seconds")
-                    alertDialog!!.setMessage("00:10")
-                    //Toast.makeText(MainActivity.this, "Motion Switch On", Toast.LENGTH_SHORT).show();
+                    binding.recyclerView.visibility = View.INVISIBLE
+                    binding.select.visibility = View.INVISIBLE
+                    binding.countdownTimer.visibility = View.VISIBLE
+
                     cdt = object : CountDownTimer(10000, 1000) {
                         override fun onTick(millisUntilFinished: Long) {
-                            alertDialog!!.setMessage("00:" + millisUntilFinished / 1000)
+                            binding.countdownTimer.text = "Will Be Activated In 00:${millisUntilFinished / 1000} Seconds.\nPlease Don't Leave the Application"
                         }
 
                         override fun onFinish() {
-                            //info.setVisibility(View.GONE);
-                            //mSwitchSet = 1
-                            alertDialog!!.hide()
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Motion Detection Mode Activated",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            binding.image.setImageResource(R.drawable.stop)
+                            binding.countdownTimer.visibility = View.GONE
+                            binding.image.isEnabled = true
+                            //Toast.makeText(this@MainActivity, "Motion Detection Mode Activated", Toast.LENGTH_SHORT).show()
                             startForegroundService(intent)
                         }
                     }.start()
-                    alertDialog!!.show()
-                    alertDialog!!.setCancelable(false)
-
-
                 }
             }
         }
-
     }
+
     fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
         val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        if (manager != null) {
-            for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-                if (serviceClass.name == service.service.className) {
-                    return true
-                }
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
             }
         }
         return false
@@ -180,8 +156,7 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
                     }
                 }
             } else {
-                Toast.makeText(applicationContext, "notification permission granted", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(applicationContext, "Notification permission granted", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -199,7 +174,6 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
     }
 
     private fun showNotificationPermissionRationale() {
-
         MaterialAlertDialogBuilder(this)
             .setTitle("Alert")
             .setMessage("Notification permission is required, to show notification")
@@ -213,14 +187,13 @@ class MainActivity : AppCompatActivity(),Adapter.OnItemSelectedListener {
     }
 
     var hasNotificationPermissionGranted = false
+
     override fun onItemSelected(position: Int) {
-        seelctposition=position;
-        mySharedPreference.saveInt(this,position)
+        seelctposition = position
+        mySharedPreference.saveInt(this, position)
     }
 
     override fun onItemDeselected() {
-        TODO("Not yet implemented")
+        // Not implemented
     }
 }
-
-
