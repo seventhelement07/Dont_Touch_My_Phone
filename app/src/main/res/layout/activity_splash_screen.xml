@@ -10,7 +10,7 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_centerInParent="true"
-        android:src="@drawable/icon" />
+        android:src="@drawable/legacy_icon" />
 
     <ProgressBar
         android:id="@+id/splash_loading"
@@ -21,8 +21,6 @@
         android:layout_marginTop="16dp"
         android:layout_centerHorizontal="true"
         android:indeterminate="true"
-
-
         />
 
 </RelativeLayout>

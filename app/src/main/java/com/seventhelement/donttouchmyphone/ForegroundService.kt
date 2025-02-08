@@ -18,6 +18,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 
 
 private var sensorMan: SensorManager? = null
@@ -46,6 +47,7 @@ class FourgroundService: Service(), SensorEventListener {
 
 
     }
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         song = intent!!.getStringExtra("message_key2")!!
         var resourceId: Int =getResources().getIdentifier(song, "raw", packageName)
@@ -96,8 +98,11 @@ class FourgroundService: Service(), SensorEventListener {
             PendingIntent.getActivity(this, 0, intent1, PendingIntent.FLAG_IMMUTABLE)
         var notification: Notification.Builder? = null
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             notification = Notification.Builder(applicationContext, CHANNEL_ID).setContentTitle("Don't Touch My Phone")
                 .setContentText("Started").setContentIntent(pendingIntent)
+        }
+
 
         startForeground(1001, notification!!.build())
         return START_NOT_STICKY
@@ -123,7 +128,7 @@ class FourgroundService: Service(), SensorEventListener {
                 turnOnFlashlight()
                 isFlashOn = true
                 mediaPlayer!!.start()
-                Toast.makeText(this,"Motion",Toast.LENGTH_SHORT).show()
+//                Toast.makeText(this,"Motion",Toast.LENGTH_SHORT).show()
                 return
             }
 
