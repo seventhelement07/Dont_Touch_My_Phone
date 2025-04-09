@@ -9,6 +9,7 @@ import androidx.annotation.NonNull
 import androidx.recyclerview.widget.RecyclerView
 import com.seventhelement.data1
 import com.seventhelement.donttouchmyphone.R
+import java.util.Locale
 
 class Adapter(
     private val list: ArrayList<data1>,
@@ -41,7 +42,7 @@ class Adapter(
             if (selectedItem == -1) {
                 f = false
             }
-            title.text = current.title.toUpperCase()
+            title.text = current.title.uppercase(Locale.getDefault())
             image.setImageResource(current.image)
 
             if (position == selectedItem) {
