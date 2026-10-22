@@ -1,6 +1,6 @@
 package com.seventhelement.donttouchmyphone
 
-import Adapter
+import android.Manifest
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
@@ -9,191 +9,295 @@ import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-
-import com.seventhelement.data1
+import com.google.android.material.slider.Slider
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.seventhelement.donttouchmyphone.databinding.ActivityMainBinding
 
-class MainActivity :AppCompatActivity(), Adapter.OnItemSelectedListener {
-    companion object {
-        private const val REQUEST_NOTIFICATION_PERMISSION = 123
-        val description = "Test Notification"
-    }
+class MainActivity : AppCompatActivity() {
 
-    lateinit var adapter: Adapter
-    lateinit var binding: ActivityMainBinding
-    @RequiresApi(Build.VERSION_CODES.O)
-    var alertDialog: AlertDialog? = null
-    var isServiceOn = false
-    var cdt: CountDownTimer? = null
-    val mySharedPreference = MySharedPreference()
-    var seelctposition = -1
+    private lateinit var binding: ActivityMainBinding
+    private var isServiceOn = false
+    private var cdt: CountDownTimer? = null
+    private val mySharedPreference = MySharedPreference()
+    private var selectedPosition = -1
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (!isGranted && Build.VERSION.SDK_INT >= 33) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                    showRationaleDialog(
+                        "Notification Permission",
+                        "Notifications are needed to show the alarm status while the service runs.",
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                } else {
+                    showSettingsDialog("Notification Permission",
+                        "Please enable notification permission in Settings.")
+                }
+            }
+        }
+
+    private val pinSetupLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode != RESULT_OK) {
+                // User didn't set a PIN — close the app
+                finish()
+            }
+        }
+
+    private val onboardingLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            mySharedPreference.setOnboardingDone(this)
+            // After onboarding, prompt PIN setup if not done yet
+            if (!mySharedPreference.hasPin(this)) {
+                pinSetupLauncher.launch(Intent(this, PinSetupActivity::class.java))
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        try {
-            seelctposition = mySharedPreference.getInt(applicationContext)
-            if (seelctposition == -1) {
-                seelctposition = 0
-            }
-        } catch (e: Exception) {}
-
-        alertDialog = AlertDialog.Builder(this).create()
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
         supportActionBar?.title = "Don't Touch My Phone"
 
+        // Request permissions
         if (Build.VERSION.SDK_INT >= 33) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            hasNotificationPermissionGranted = true
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        val list = ArrayList<data1>()
-        list.add(data1("alarm", R.drawable.alarm))
-        list.add(data1("applause", R.drawable.applause))
-        list.add(data1("telephone", R.drawable.call))
-        list.add(data1("cartoon", R.drawable.cartoon))
-        list.add(data1("dog", R.drawable.dog))
-        list.add(data1("gaming", R.drawable.gaming))
-        list.add(data1("bike", R.drawable.bike))
-        list.add(data1("buzzer", R.drawable.buzzer))
-        list.add(data1("car", R.drawable.car))
-        list.add(data1("iphone_alarm", R.drawable.iphone))
-        list.add(data1("machine_gun", R.drawable.machin_gun))
-        list.add(data1("meow", R.drawable.cat))
-        list.add(data1("sniper", R.drawable.sniper))
+        // A PIN saved before salted hashing was introduced can never match again — clear it
+        // so the check below correctly detects "no PIN" and prompts the user to set a new one.
+        mySharedPreference.migrateLegacyPinIfNeeded(this)
 
+        // First launch: show onboarding then PIN setup in sequence
+        if (mySharedPreference.isFirstLaunch(this)) {
+            onboardingLauncher.launch(Intent(this, OnboardingActivity::class.java))
+        } else if (!mySharedPreference.hasPin(this)) {
+            pinSetupLauncher.launch(Intent(this, PinSetupActivity::class.java))
+        }
+
+        // Restore selected sound
+        selectedPosition = mySharedPreference.getInt(this).let { if (it == -1) 0 else it }
+        updateSoundLabel()
+
+        // Open sound picker bottom sheet
+        binding.soundPickerRow.setOnClickListener {
+            SoundPickerBottomSheet(selectedPosition) { position ->
+                selectedPosition = position
+                mySharedPreference.saveInt(this, position)
+                updateSoundLabel()
+            }.show(supportFragmentManager, "SoundPicker")
+        }
+
+        // Sensitivity slider
+        val savedIndex = mySharedPreference.getSensitivityIndex(this)
+        binding.sensitivitySlider.value = savedIndex.toFloat()
+        updateSensitivityHint(savedIndex)
+        binding.sensitivitySlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {}
+            override fun onStopTrackingTouch(slider: Slider) {
+                val index = slider.value.toInt()
+                mySharedPreference.saveSensitivityIndex(this@MainActivity, index)
+                updateSensitivityHint(index)
+            }
+        })
+
+        // History button
+        binding.btnHistory.setOnClickListener {
+            startActivity(Intent(this, AlarmHistoryActivity::class.java))
+        }
+
+        // Service state
         isServiceOn = isServiceRunning(applicationContext, FourgroundService::class.java)
-        val intent = Intent(applicationContext, FourgroundService::class.java)
-        adapter = Adapter(list, this, packageName, this, seelctposition, true)
-        binding.recyclerView.layoutManager = GridLayoutManager(this, 2)
-        binding.recyclerView.adapter = adapter
+        applyServiceState(isServiceOn)
 
-        if (isServiceOn) {
-            binding.recyclerView.visibility = View.INVISIBLE
-            binding.select.visibility = View.INVISIBLE
+        // Start/Stop button
+        val serviceIntent = Intent(applicationContext, FourgroundService::class.java)
+        binding.image.setOnClickListener {
+            if (selectedPosition == -1) {
+                Toast.makeText(this, "Please select a sound first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+            val soundTitle = Constants.getlist()[selectedPosition].title
+            val soundResId = resources.getIdentifier(soundTitle, "raw", packageName)
+            serviceIntent.putExtra("message_key2", soundTitle)
+            serviceIntent.putExtra("sound_res_id", soundResId)
+
+            if (isServiceOn) {
+                cdt?.cancel()
+                stopService(serviceIntent)
+                isServiceOn = false
+                mySharedPreference.setArmed(this, false)
+                applyServiceState(false)
+            } else {
+                isServiceOn = true
+                mySharedPreference.setArmed(this, true)
+                applyServiceState(true)
+
+                // Start service immediately while still in foreground (Android 12+ restriction)
+                startForegroundService(serviceIntent)
+
+                binding.countdownTimer.visibility = View.VISIBLE
+                binding.image.setImageResource(R.drawable.stop2)
+                binding.image.isEnabled = false
+
+                cdt = object : CountDownTimer(10000, 1000) {
+                    override fun onTick(millisUntilFinished: Long) {
+                        val seconds = millisUntilFinished / 1000
+                        binding.countdownTimer.text =
+                            "Activating in 00:%02d — don't move!".format(seconds)
+                    }
+
+                    override fun onFinish() {
+                        cdt = null
+                        binding.countdownTimer.visibility = View.GONE
+                        binding.image.setImageResource(R.drawable.stop)
+                        binding.image.isEnabled = true
+                    }
+                }.start()
+            }
+        }
+    }
+
+    private fun applyServiceState(running: Boolean) {
+        if (running) {
+            binding.soundPickerRow.visibility = View.INVISIBLE
+            binding.sensitivitySection.visibility = View.INVISIBLE
+            binding.btnHistory.visibility = View.INVISIBLE
             binding.image.setImageResource(R.drawable.stop)
             binding.statusBtn.text = "STOP"
         } else {
-            binding.recyclerView.visibility = View.VISIBLE
-            binding.select.visibility = View.VISIBLE
+            binding.soundPickerRow.visibility = View.VISIBLE
+            binding.sensitivitySection.visibility = View.VISIBLE
+            binding.btnHistory.visibility = View.VISIBLE
             binding.image.setImageResource(R.drawable.turnonicon)
             binding.statusBtn.text = "START"
-        }
-
-        binding.image.setOnClickListener {
-            if (seelctposition == -1)
-                Toast.makeText(this, "Please Select Any Sound To Continue", Toast.LENGTH_SHORT).show()
-            else {
-                intent.putExtra("message_key2", Constants.getlist()[seelctposition].title)
-                if (isServiceOn) {
-                    binding.recyclerView.visibility = View.VISIBLE
-                    binding.select.visibility = View.VISIBLE
-                    binding.statusBtn.text = "START SERVICE"
-                    binding.image.setImageResource(R.drawable.turnonicon)
-                    binding.image.isEnabled = true
-                    stopService(intent)
-                    isServiceOn = false
-                } else {
-                    binding.image.setImageResource(R.drawable.stop2)
-                    binding.image.isEnabled = false
-                    isServiceOn = true
-                    adapter.releaseMediaPlayer()
-                    binding.statusBtn.text = "STOP SERVICE"
-                    binding.recyclerView.visibility = View.INVISIBLE
-                    binding.select.visibility = View.INVISIBLE
-                    binding.countdownTimer.visibility = View.VISIBLE
-
-                    cdt = object : CountDownTimer(10000, 1000) {
-                        override fun onTick(millisUntilFinished: Long) {
-                            binding.countdownTimer.text = "Will Be Activated In 00:${millisUntilFinished / 1000} Seconds.\nPlease Don't Leave the Application"
-                        }
-
-                        override fun onFinish() {
-                            binding.image.setImageResource(R.drawable.stop)
-                            binding.countdownTimer.visibility = View.GONE
-                            binding.image.isEnabled = true
-                            //Toast.makeText(this@MainActivity, "Motion Detection Mode Activated", Toast.LENGTH_SHORT).show()
-                            startForegroundService(intent)
-                        }
-                    }.start()
-                }
-            }
+            binding.countdownTimer.visibility = View.GONE
+            binding.image.isEnabled = true
         }
     }
 
-    fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
-        val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-            if (serviceClass.name == service.service.className) {
-                return true
-            }
+    private fun updateSensitivityHint(index: Int) {
+        binding.tvSensitivityHint.text = when (index) {
+            0 -> "Needs a strong shake to trigger"
+            1 -> "Responds to moderate movement"
+            else -> "Triggers on the slightest touch"
         }
-        return false
     }
 
-    private val notificationPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            hasNotificationPermissionGranted = isGranted
-            if (!isGranted) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        if (shouldShowRequestPermissionRationale(android.Manifest.permission.POST_NOTIFICATIONS)) {
-                            showNotificationPermissionRationale()
-                        } else {
-                            showSettingDialog()
-                        }
+    private fun updateSoundLabel() {
+        val title = if (selectedPosition >= 0) {
+            Constants.getlist()[selectedPosition].title.replace('_', ' ')
+                .replaceFirstChar { it.uppercaseChar() }
+        } else {
+            "None selected"
+        }
+        binding.tvSelectedSound.text = title
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val nowRunning = isServiceRunning(applicationContext, FourgroundService::class.java)
+        if (nowRunning != isServiceOn && cdt == null) {
+            isServiceOn = nowRunning
+            applyServiceState(nowRunning)
+        }
+        maybeShowRatingPrompt()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_history -> {
+                startActivity(Intent(this, AlarmHistoryActivity::class.java))
+                true
+            }
+            R.id.action_share -> {
+                shareApp()
+                true
+            }
+            R.id.action_help -> {
+                startActivity(Intent(this, OnboardingActivity::class.java))
+                true
+            }
+            R.id.action_privacy -> {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.privacy_policy_url))))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun shareApp() {
+        val text = "Check out \"Don't Touch My Phone\" — it sets off a loud alarm if anyone picks up your phone without your PIN! " +
+                "https://play.google.com/store/apps/details?id=${packageName}"
+        startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+        }, "Share via"))
+    }
+
+    private fun maybeShowRatingPrompt() {
+        if (mySharedPreference.hasRated(this)) return
+        if (mySharedPreference.getTriggerCount(this) < 3) return
+        try {
+            val manager = ReviewManagerFactory.create(this)
+            manager.requestReviewFlow().addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    manager.launchReviewFlow(this, task.result).addOnCompleteListener {
+                        mySharedPreference.setHasRated(this)
                     }
                 }
-            } else {
-                Toast.makeText(applicationContext, "Notification permission granted", Toast.LENGTH_SHORT).show()
             }
-        }
-
-    private fun showSettingDialog() {
-        MaterialAlertDialogBuilder(this, com.google.android.material.R.style.MaterialAlertDialog_Material3)
-            .setTitle("Notification Permission")
-            .setMessage("Notification permission is required, Please allow notification permission from setting")
-            .setPositiveButton("Ok") { _, _ ->
-                val intent = Intent(ACTION_APPLICATION_DETAILS_SETTINGS)
-                intent.data = Uri.parse("package:$packageName")
-                startActivity(intent)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        } catch (_: Exception) {}
     }
 
-    private fun showNotificationPermissionRationale() {
+    private fun showRationaleDialog(title: String, message: String, permission: String) {
         MaterialAlertDialogBuilder(this)
-            .setTitle("Alert")
-            .setMessage("Notification permission is required, to show notification")
-            .setPositiveButton("Ok") { _, _ ->
-                if (Build.VERSION.SDK_INT >= 33) {
-                    notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                }
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("OK") { _, _ ->
+                notificationPermissionLauncher.launch(permission)
             }
             .setNegativeButton("Cancel", null)
             .show()
     }
 
-    var hasNotificationPermissionGranted = false
-
-    override fun onItemSelected(position: Int) {
-        seelctposition = position
-        mySharedPreference.saveInt(this, position)
+    private fun showSettingsDialog(title: String, message: String) {
+        MaterialAlertDialogBuilder(this,
+            com.google.android.material.R.style.MaterialAlertDialog_Material3)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Open Settings") { _, _ ->
+                startActivity(Intent(ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                })
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
-    override fun onItemDeselected() {
-        // Not implemented
+    override fun onDestroy() {
+        cdt?.cancel()
+        super.onDestroy()
+    }
+
+    private fun isServiceRunning(context: Context, serviceClass: Class<*>): Boolean {
+        val manager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        @Suppress("DEPRECATION")
+        return manager.getRunningServices(Int.MAX_VALUE)
+            .any { serviceClass.name == it.service.className }
     }
 }

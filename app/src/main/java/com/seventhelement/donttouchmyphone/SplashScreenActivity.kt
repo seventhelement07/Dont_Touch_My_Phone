@@ -8,8 +8,7 @@ import android.os.Looper
 import com.seventhelement.donttouchmyphone.databinding.ActivitySplashScreenBinding
 
 class SplashScreenActivity : AppCompatActivity() {
-    private val splashTimeout: Long = 3000 // 3 seconds
-    private val loaderDelay: Long = 2000
+    private val splashTimeout: Long = 1000
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash_screen)

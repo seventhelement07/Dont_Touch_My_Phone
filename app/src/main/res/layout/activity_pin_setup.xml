@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="Set Your Alarm PIN"
+        android:textColor="#000000"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pinSetupSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Enter a 4-digit PIN to stop the alarm"
+        android:textColor="#666666"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/pinDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:letterSpacing="0.5"
+        android:text="○  ○  ○  ○"
+        android:textColor="#E65100"
+        android:textSize="36sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/pinError"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text=""
+        android:textColor="#F44336"
+        android:textSize="14sp"
+        android:visibility="invisible" />
+
+    <TableLayout
+        android:layout_width="280dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:stretchColumns="*">
+
+        <TableRow android:layout_marginBottom="8dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn1"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="1"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn2"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="2"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn3"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="3"
+                android:textSize="22sp" />
+        </TableRow>
+
+        <TableRow android:layout_marginBottom="8dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn4"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="4"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn5"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="5"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn6"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="6"
+                android:textSize="22sp" />
+        </TableRow>
+
+        <TableRow android:layout_marginBottom="8dp">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn7"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="7"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn8"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="8"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn9"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="9"
+                android:textSize="22sp" />
+        </TableRow>
+
+        <TableRow>
+            <View
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn0"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="0"
+                android:textSize="22sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBackspace"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_margin="4dp"
+                android:layout_weight="1"
+                android:text="⌫"
+                android:textSize="22sp" />
+        </TableRow>
+
+    </TableLayout>
+
+</LinearLayout>

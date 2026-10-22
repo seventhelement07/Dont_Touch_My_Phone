@@ -1,3 +1,5 @@
+package com.seventhelement.donttouchmyphone.Adapter
+
 import android.content.Context
 import android.media.MediaPlayer
 import android.view.LayoutInflater
@@ -6,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.NonNull
+import androidx.appcompat.widget.LinearLayoutCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.seventhelement.data1
 import com.seventhelement.donttouchmyphone.R
@@ -24,9 +27,11 @@ class Adapter(
     private var currentPlayingPosition: Int = -1
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val ll: LinearLayoutCompat = itemView.findViewById(R.id.ll)
         val title: TextView = itemView.findViewById(R.id.textView)
-        val ll: androidx.appcompat.widget.LinearLayoutCompat = itemView.findViewById(R.id.ll)
         val image: ImageView = itemView.findViewById(R.id.imageView)
+        val checkBadge: TextView = itemView.findViewById(R.id.checkBadge)
+        val playingLabel: TextView = itemView.findViewById(R.id.playingLabel)
 
         init {
             itemView.setOnClickListener {
@@ -39,30 +44,46 @@ class Adapter(
         }
 
         fun bind(current: data1, position: Int) {
-            if (selectedItem == -1) {
-                f = false
-            }
-            title.text = current.title.uppercase(Locale.getDefault())
+            if (selectedItem == -1) f = false
+
+            title.text = current.title.replace('_', ' ').uppercase(Locale.getDefault())
             image.setImageResource(current.image)
 
             if (position == selectedItem) {
                 if (f) {
                     f = false
-                } else if (currentPlayingPosition == position && mediaPlayer?.isPlaying == true && currentPlayingPosition != -1) {
-                    if(mediaPlayer!=null)
-                        stopMediaPlayer()
+                    // Initial bind with pre-selected item — highlight but don't replay
+                    ll.setBackgroundResource(R.drawable.ll_back2)
+                    checkBadge.visibility = View.VISIBLE
+                    playingLabel.visibility = View.GONE
+                } else if (currentPlayingPosition == position && mediaPlayer?.isPlaying == true) {
+                    // Tapping the currently-playing item stops it
+                    stopMediaPlayer()
+                    ll.setBackgroundResource(R.drawable.ll_back2)
+                    checkBadge.visibility = View.VISIBLE
+                    playingLabel.visibility = View.GONE
                 } else {
-                    if(mediaPlayer!=null)
+                    // Start playing preview
                     stopMediaPlayer()
                     currentPlayingPosition = position
                     listener.onItemSelected(position)
                     val resourceId = context.resources.getIdentifier(current.title, "raw", packageName)
-                    mediaPlayer = MediaPlayer.create(context, resourceId)
-                    mediaPlayer?.start()
+                    if (resourceId != 0) {
+                        mediaPlayer = MediaPlayer.create(context, resourceId)
+                        mediaPlayer?.setOnCompletionListener {
+                            currentPlayingPosition = -1
+                            notifyDataSetChanged()
+                        }
+                        mediaPlayer?.start()
+                    }
+                    ll.setBackgroundResource(R.drawable.ll_back2)
+                    checkBadge.visibility = View.VISIBLE
+                    playingLabel.visibility = if (mediaPlayer?.isPlaying == true) View.VISIBLE else View.GONE
                 }
-                itemView.setBackgroundResource(R.drawable.ll_back2)
             } else {
-                itemView.setBackgroundResource(R.drawable.ll_back)
+                ll.setBackgroundResource(R.drawable.ll_back)
+                checkBadge.visibility = View.GONE
+                playingLabel.visibility = View.GONE
             }
         }
     }
@@ -73,28 +94,27 @@ class Adapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val current = list[position]
-        holder.bind(current, position)
+        holder.bind(list[position], position)
     }
 
-    override fun getItemCount(): Int {
-        return list.size
-    }
+    override fun getItemCount(): Int = list.size
 
     private fun stopMediaPlayer() {
         mediaPlayer?.apply {
-            if(isPlaying)
-            stop()
+            if (isPlaying) stop()
             release()
         }
         mediaPlayer = null
+        currentPlayingPosition = -1
     }
 
     fun releaseMediaPlayer() {
         mediaPlayer?.apply {
+            if (isPlaying) stop()
             release()
         }
         mediaPlayer = null
+        currentPlayingPosition = -1
     }
 
     interface OnItemSelectedListener {

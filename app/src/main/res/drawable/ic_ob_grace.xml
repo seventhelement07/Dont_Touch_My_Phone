@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Phone with PIN dots + countdown ring — Grace period illustration (white on transparent) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Countdown progress ring around phone (75% filled = 270° arc) -->
+    <!-- Center at (60,54), r=50. Arc from top (60,4) clockwise 270° to left (10,54) -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 60,4 A 50,50 0 1 1 10,54"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:strokeAlpha="0.5" />
+
+    <!-- Phone body -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M 41,10 L 79,10 A 6,6 0 0 1 85,16 L 85,92 A 6,6 0 0 1 79,98 L 41,98 A 6,6 0 0 1 35,92 L 35,16 A 6,6 0 0 1 41,10 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3" />
+
+    <!-- Screen -->
+    <path
+        android:fillColor="#20FFFFFF"
+        android:pathData="M 39,20 L 81,20 L 81,82 L 39,82 Z" />
+
+    <!-- Camera notch -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 60,15 A 3,3 0 1 0 60.001,15 Z" />
+
+    <!-- PIN dot 1 - filled -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 45,50 A 5,5 0 1 0 45.001,50 Z" />
+
+    <!-- PIN dot 2 - filled -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 55,50 A 5,5 0 1 0 55.001,50 Z" />
+
+    <!-- PIN dot 3 - empty -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 65,50 A 5,5 0 1 0 65.001,50 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2" />
+
+    <!-- PIN dot 4 - empty -->
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M 75,50 A 5,5 0 1 0 75.001,50 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2" />
+
+    <!-- "5s" style: small arc dot at top of ring (start of countdown) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M 60,4 A 3,3 0 1 0 60.001,4 Z" />
+
+</vector>
