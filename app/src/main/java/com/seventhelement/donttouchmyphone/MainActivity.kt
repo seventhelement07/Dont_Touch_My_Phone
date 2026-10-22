@@ -117,6 +117,21 @@ class MainActivity : AppCompatActivity() {
 
         // Service state
         isServiceOn = isServiceRunning(applicationContext, FourgroundService::class.java)
+
+        // Resume protection if it was armed before a reboot but couldn't auto-start from
+        // BOOT_COMPLETED directly (Android 15+ restriction) — this is a safe, user-initiated
+        // start since the app is now genuinely in the foreground.
+        if (!isServiceOn && mySharedPreference.isArmed(this)) {
+            val position = mySharedPreference.getInt(this).let { if (it == -1) 0 else it }
+            val soundTitle = Constants.getlist().getOrNull(position)?.title ?: ""
+            val soundResId = resources.getIdentifier(soundTitle, "raw", packageName)
+            val resumeIntent = Intent(applicationContext, FourgroundService::class.java)
+                .putExtra("message_key2", soundTitle)
+                .putExtra("sound_res_id", soundResId)
+            startForegroundService(resumeIntent)
+            isServiceOn = true
+        }
+
         applyServiceState(isServiceOn)
 
         // Start/Stop button
